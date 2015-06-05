@@ -5,3 +5,17 @@
 [![Scrutinizer Coverage](https://img.shields.io/scrutinizer/coverage/g/rtheunissen/guzzle-rate-limiter.svg?style=flat-square)](https://scrutinizer-ci.com/g/rtheunissen/guzzle-rate-limiter/)
 [![Latest Version](https://img.shields.io/packagist/v/rtheunissen/guzzle-rate-limiter.svg?style=flat-square)](https://packagist.org/packages/rtheunissen/guzzle-rate-limiter)
 [![License](https://img.shields.io/packagist/l/rtheunissen/guzzle-rate-limiter.svg?style=flat-square)](https://packagist.org/packages/rtheunissen/guzzle-rate-limiter)
+
+## Installation
+
+```bash
+composer require rtheunissen/guzzle-rate-limiter
+```
+
+## Usage
+
+There is currently no default implementation for `RateLimitProvider`.
+
+```php
+$handlerStack->push(new RateLimiter($rateLimitProvider));
+```

@@ -14,12 +14,16 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~4.6",
-        "mockery/mockery": "^0.9.4"
+        "mockery/mockery": "~0.9"
     },
     "autoload": {
         "psr-4": {
-            "Concat\\Http\\Middleware\\": "src/",
-            "Concat\\Http\\Middleware\\Test\\": "tests/"
+            "Concat\\Http\\Middleware\\": "src",
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Concat\\Http\\Middleware\\Test\\": "tests"
         }
     }
 }

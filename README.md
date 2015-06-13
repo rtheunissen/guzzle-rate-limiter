@@ -17,5 +17,5 @@ composer require rtheunissen/guzzle-rate-limiter
 There is currently no default implementation for `RateLimitProvider`.
 
 ```php
-$handlerStack->push(new RateLimiter($rateLimitProvider));
+$handlerStack->push(new \Concat\Http\Middleware\RateLimiter($rateLimitProvider));
 ```

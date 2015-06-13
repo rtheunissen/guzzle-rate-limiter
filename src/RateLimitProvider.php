@@ -16,18 +16,26 @@ interface RateLimitProvider
 {
 
     /**
-     * Returns when the last request was made (in microseconds).
+     * Returns when the last request was made.
      *
-     * @return float|null When the last request was made (in microseconds) or
-     *                    NULL if no such record exists.
+     * @return float|null When the last request was made.
      */
-    function getLastRequestTime();
+    public function getLastRequestTime();
 
     /**
-     * Used to set the current time (in microseconds) as the last request time
-     * to be queried when the next request is attempted.
+     * Used to set the current time as the last request time to be queried when
+     * the next request is attempted.
      */
-    function setLastRequestTime();
+    public function setLastRequestTime();
+
+    /**
+     * Returns what is considered the time when a given request is being made.
+     *
+     * @param RequestInterface $request The request being made.
+     *
+     * @return float Time when the given request is being made.
+     */
+    public function getRequestTime(RequestInterface $request);
 
     /**
      * Returns the minimum amount of time that is required to have passed since
@@ -42,7 +50,7 @@ interface RateLimitProvider
      * @return float The minimum amount of time that is required to have passed
      *               since the last request was made (in microseconds).
      */
-    function getRequestAllowance(RequestInterface $request);
+    public function getRequestAllowance(RequestInterface $request);
 
     /**
      * Used to set the minimum amount of time that is required to pass between
@@ -50,5 +58,5 @@ interface RateLimitProvider
      *
      * @param ResponseInterface $response The resolved response.
      */
-    function setRequestAllowance(ResponseInterface $response);
+    public function setRequestAllowance(ResponseInterface $response);
 }

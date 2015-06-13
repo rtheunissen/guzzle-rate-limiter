@@ -4,6 +4,8 @@ namespace Concat\Http\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 /**
  * Guzzle middleware which delays requests if they exceed a rate allowance.
@@ -16,29 +18,93 @@ class RateLimiter
     private $provider;
 
     /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Creates a callable middleware rate limiter.
      *
      * @param RateLimitProvider $provider A rate data provider.
      */
-    public function __construct(RateLimitProvider $provider)
-    {
+    public function __construct(
+        RateLimitProvider $provider,
+        LoggerInterface $logger = null
+    ) {
         $this->provider = $provider;
+        $this->logger = $logger;
     }
 
     /**
-     * Called when the middleware is handled. Delays the request, then sets the
-     * allowance for the next request.
+     * Delays and logs the request then sets the allowance for the next request.
      */
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, $options) use ($handler) {
 
-            // Delay the request
-            $this->delay($request);
+            // Amount of time to delay the request by
+            $delay = $this->getDelay($request);
+
+            if ($delay > 0) {
+                $this->delay($delay);
+            }
+
+            // Log for debug purposes even if delay is zero.
+            $this->log($request, $delay);
+
+            // Sets the time when this request is beind made,
+            // which allows calculation of allowance later on.
+            $this->provider->setLastRequestTime();
 
             // Set the allowance when the response was received
             return $handler($request, $options)->then($this->setAllowance());
         };
+    }
+
+    /**
+     * Logs a request which is being delayed by a specified amount of time.
+     *
+     * @param RequestInterface The request being delayed.
+     * @param float $delay The amount of time that the request is delayed for.
+     */
+    protected function log(RequestInterface $request, $delay)
+    {
+        if (isset($this->logger)) {
+            $level   = $this->getLogLevel($request, $delay);
+            $message = $this->getLogMessage($request, $delay);
+            $context = compact('request', 'delay');
+
+            $this->logger->log($level, $message, $context);
+        }
+    }
+
+    /**
+     * Formats a request and delay time as a log message.
+     *
+     * @param RequestInterface $request The request being logged.
+     * @param float $delay The amount of time that the request is delayed for.
+     *
+     * @return string Log message
+     */
+    protected function getLogMessage(RequestInterface $request, $delay)
+    {
+        return vsprintf("%s %s was delayed by {$delay}us", [
+            $request->getMethod(),
+            $request->getUri()
+        ]);
+    }
+
+    /**
+     * Returns the log level for the given request and time to delay.
+     *
+     * @param RequestInterface $request The request being logged.
+     * @param float $delay The amount of time that the request is delayed for.
+     *
+     * @return string LogLevel
+     */
+    protected function getLogLevel(RequestInterface $request, $delay)
+    {
+        return $delay > 0 ? LogLevel::INFO : LogLevel::DEBUG;
     }
 
     /**
@@ -48,31 +114,26 @@ class RateLimiter
      *
      * @return float The delay duration (in microseconds).
      */
-    private function getDelay(RequestInterface $request)
+    protected function getDelay(RequestInterface $request)
     {
-        // The time at which the last request was made
-        $lastRequestTime = $this->provider->getLastRequestTime();
+        $lastRequestTime  = $this->provider->getLastRequestTime();
+        $requestAllowance = $this->provider->getRequestAllowance($request);
+        $requestTime      = $this->provider->getRequestTime($request);
 
-        // Minimum time that had to have passed since the last request
-        $allowance = $this->provider->getRequestAllowance($request);
-
-        // If lastRequestTime is null|false, the max will be 0.
-        return max(0, $allowance - (microtime(true) - $lastRequestTime));
+        // If lastRequestTime is null or false, the max will be 0.
+        return max(0, $requestAllowance - ($requestTime - $lastRequestTime));
     }
 
     /**
-     * Delays the given request if the delay duration is greater than zero.
+     * Delays the given request by an amount of microseconds.
      *
-     * @param RequestInterface $request Request to delay.
+     * @param float $time The amount of time (in microseconds) to delay by.
+     *
+     * @codeCoverageIgnore
      */
-    private function delay(RequestInterface $request)
+    protected function delay($time)
     {
-        // Delay the request if required
-        if (($delay = $this->getDelay($request)) > 0) {
-            usleep($delay);
-        }
-
-        $this->provider->setLastRequestTime();
+        usleep($time);
     }
 
     /**
@@ -81,7 +142,7 @@ class RateLimiter
      *
      * @return Closure Handler to set request allowance on the rate provider.
      */
-    private function setAllowance()
+    protected function setAllowance()
     {
         return function (ResponseInterface $response) {
             $this->provider->setRequestAllowance($response);

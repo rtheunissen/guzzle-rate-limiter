@@ -16,6 +16,11 @@ use ReflectionClass;
 class RateLimiterTest extends \PHPUnit_Framework_TestCase
 {
 
+    public function tearDown()
+    {
+        m::close();
+    }
+
     private function getMethod($class, $name)
     {
         $class = new ReflectionClass($class);
@@ -72,23 +77,18 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
     public function providerTestInvoke()
     {
         return [
-            ['GET', 1, LogLevel::INFO,  "GET / was delayed by 1us"],
-            ['PUT', 0, LogLevel::DEBUG, "PUT / was delayed by 0us"]
+            ['GET', 1, LogLevel::DEBUG],
         ];
     }
 
     /**
      * @dataProvider providerTestInvoke
      */
-    public function testInvoke($method, $delay, $level, $message)
+    public function testInvoke($method, $delay, $level)
     {
         $provider = m::mock(RateLimitProvider::class);
-
-        $provider->shouldReceive('getRequestAllowance')->once()->with(m::type(RequestInterface::class));
         $provider->shouldReceive('setRequestAllowance')->once()->with(m::type(ResponseInterface::class));
-        $provider->shouldReceive('getLastRequestTime')->once();
         $provider->shouldReceive('setLastRequestTime')->once();
-        $provider->shouldReceive('getRequestTime')->once();
 
         $promise = m::mock(PromiseInterface::class);
         $promise->shouldReceive('then')->once()->andReturnUsing(function ($a) {
@@ -104,7 +104,7 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
         $request->shouldReceive('getUri')->andReturn('/');
 
         $logger = m::mock(LoggerInterface::class);
-        $logger->shouldReceive('log')->with($level, $message, m::type('array'));
+        $logger->shouldReceive('log')->with($level, m::type('string'), m::type('array'));
 
         $limiter = m::mock(RateLimiter::class . "[getDelay,delay]", [$provider, $logger]);
         $limiter->shouldAllowMockingProtectedMethods();

@@ -47,10 +47,8 @@ class RateLimiter
 
             if ($delay > 0) {
                 $this->delay($delay);
+                $this->log($request, $delay);
             }
-
-            // Log for debug purposes even if delay is zero.
-            $this->log($request, $delay);
 
             // Sets the time when this request is beind made,
             // which allows calculation of allowance later on.
@@ -105,7 +103,7 @@ class RateLimiter
      */
     protected function getLogLevel(RequestInterface $request, $delay)
     {
-        return $delay > 0 ? LogLevel::INFO : LogLevel::DEBUG;
+        return LogLevel::DEBUG;
     }
 
     /**

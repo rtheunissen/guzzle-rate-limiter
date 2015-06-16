@@ -1,6 +1,7 @@
 {
     "name": "rtheunissen/guzzle-rate-limiter",
-    "description": "Guzzle middleware to delay requests that exceed a rate allowance",
+    "description": "Guzzle 6 middleware used to delay requests dynamically",
+    "keywords": ["guzzle", "http", "middleware", "throttle", rate", "psr7"],
     "license": "MIT",
     "authors": [
         {

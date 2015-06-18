@@ -78,6 +78,8 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
     {
         return [
             ['GET', 1, LogLevel::DEBUG],
+            ['GET', 1, null],
+            ['GET', 1, function() { return LogLevel::DEBUG; }],
         ];
     }
 
@@ -104,10 +106,14 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
         $request->shouldReceive('getUri')->andReturn('/');
 
         $logger = m::mock(LoggerInterface::class);
-        $logger->shouldReceive('log')->with($level, m::type('string'), m::type('array'));
+        $logger->shouldReceive('log')->with(LogLevel::DEBUG, m::type('string'), m::type('array'));
 
         $limiter = m::mock(RateLimiter::class . "[getDelay,delay]", [$provider, $logger]);
         $limiter->shouldAllowMockingProtectedMethods();
+
+        if ($level) {
+            $limiter->setLogLevel($level);
+        }
 
         $limiter->shouldReceive('getDelay')->once()->with(m::type(RequestInterface::class))->andReturn($delay);
         $limiter->shouldReceive('delay')->once()->with($delay);

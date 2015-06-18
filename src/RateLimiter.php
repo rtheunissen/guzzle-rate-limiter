@@ -23,6 +23,11 @@ class RateLimiter
     private $logger;
 
     /**
+     * @var string|callable Constant or callable that accepts a Response.
+     */
+    protected $logLevel;
+
+    /**
      * Creates a callable middleware rate limiter.
      *
      * @param RateLimitProvider $provider A rate data provider.
@@ -94,16 +99,45 @@ class RateLimiter
     }
 
     /**
-     * Returns the log level for the given request and time to delay.
-     *
-     * @param RequestInterface $request The request being logged.
-     * @param float $delay The amount of time that the request is delayed for.
+     * Returns the default log level.
      *
      * @return string LogLevel
      */
-    protected function getLogLevel(RequestInterface $request, $delay)
+    protected function getDefaultLogLevel()
     {
         return LogLevel::DEBUG;
+    }
+
+    /**
+     * Sets the log level to use, which can be either a string or a callable
+     * that accepts a response (which could be null). A log level could also
+     * be null, which indicates that the default log level should be used.
+     *
+     * @param string|callable|null
+     */
+    public function setLogLevel($logLevel)
+    {
+        $this->logLevel = $logLevel;
+    }
+
+    /**
+     * Returns a log level for a given response.
+     *
+     * @param ResponseInterface $response The response being logged.
+     *
+     * @return string LogLevel
+     */
+    protected function getLogLevel(RequestInterface $request)
+    {
+        if ( ! $this->logLevel) {
+            return $this->getDefaultLogLevel();
+        }
+
+        if (is_callable($this->logLevel)) {
+            return call_user_func($this->logLevel, $request);
+        }
+
+        return (string) $this->logLevel;
     }
 
     /**

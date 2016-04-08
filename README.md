@@ -73,7 +73,8 @@ class Provider implements RateLimitProvider
      */
     public function getRequestTime(RequestInterface $request)
     {
-        //
+        // The time unit for this value should match the time unit used across
+        // this implementation.
         return microtime(true);
     }
 

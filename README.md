@@ -25,7 +25,7 @@ $handlerStack->push(new RateLimiter($rateLimitProvider));
 
 ## Example
 
-```
+```php
 <?php
 
 use Psr\Http\Message\ResponseInterface;

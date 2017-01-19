@@ -18,7 +18,7 @@ class RateLimiter
     private $provider;
 
     /**
-     * @var \Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     private $logger;
 
@@ -31,6 +31,7 @@ class RateLimiter
      * Creates a callable middleware rate limiter.
      *
      * @param RateLimitProvider $provider A rate data provider.
+     * @param LoggerInterface   $logger
      */
     public function __construct(
         RateLimitProvider $provider,
@@ -42,6 +43,9 @@ class RateLimiter
 
     /**
      * Delays and logs the request then sets the allowance for the next request.
+     *
+     * @param callable $handler
+     * @return \Closure
      */
     public function __invoke(callable $handler)
     {
@@ -55,7 +59,7 @@ class RateLimiter
                 $this->log($request, $delay);
             }
 
-            // Sets the time when this request is beind made,
+            // Sets the time when this request is being made,
             // which allows calculation of allowance later on.
             $this->provider->setLastRequestTime();
 
@@ -67,13 +71,13 @@ class RateLimiter
     /**
      * Logs a request which is being delayed by a specified amount of time.
      *
-     * @param RequestInterface The request being delayed.
-     * @param float $delay The amount of time that the request is delayed for.
+     * @param RequestInterface $request The request being delayed.
+     * @param float            $delay The amount of time that the request is delayed for.
      */
     protected function log(RequestInterface $request, $delay)
     {
         if (isset($this->logger)) {
-            $level   = $this->getLogLevel($request, $delay);
+            $level   = $this->getLogLevel($request);
             $message = $this->getLogMessage($request, $delay);
             $context = compact('request', 'delay');
 
@@ -121,15 +125,14 @@ class RateLimiter
     }
 
     /**
-     * Returns a log level for a given response.
+     * Returns a log level for a given request.
      *
-     * @param ResponseInterface $response The response being logged.
-     *
+     * @param RequestInterface $request The request being logged.
      * @return string LogLevel
      */
     protected function getLogLevel(RequestInterface $request)
     {
-        if ( ! $this->logLevel) {
+        if (!$this->logLevel) {
             return $this->getDefaultLogLevel();
         }
 
@@ -143,7 +146,7 @@ class RateLimiter
     /**
      * Returns the delay duration for the given request (in microseconds).
      *
-     * @param RequestInterface $request Rquest to get the delay duration for.
+     * @param RequestInterface $request Request to get the delay duration for.
      *
      * @return float The delay duration (in microseconds).
      */
@@ -173,7 +176,7 @@ class RateLimiter
      * Returns a callable handler which allows the provider to set the request
      * allowance for the next request, using the current response.
      *
-     * @return Closure Handler to set request allowance on the rate provider.
+     * @return \Closure Handler to set request allowance on the rate provider.
      */
     protected function setAllowance()
     {

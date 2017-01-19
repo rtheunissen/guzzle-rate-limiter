@@ -2,7 +2,7 @@
 
 namespace Concat\Http\Middleware\Test;
 
-use \Mockery as m;
+use Mockery as m;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -10,7 +10,6 @@ use Psr\Log\LogLevel;
 use Concat\Http\Middleware\RateLimiter;
 use GuzzleHttp\Promise\PromiseInterface;
 use Concat\Http\Middleware\RateLimitProvider;
-use Closure;
 use ReflectionClass;
 
 class RateLimiterTest extends \PHPUnit_Framework_TestCase

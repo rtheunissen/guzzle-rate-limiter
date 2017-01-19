@@ -116,10 +116,11 @@ class Provider implements RateLimitProvider
         $requests = $response->getHeader('ratelimit-remaining');
         $seconds  = $response->getHeader('ratelimit-window');
 
-        // The allowance is therefore how many requests we are allowed to make
-        // over a given period of time. This is the value we need to store to
-        // determine if a future request should be delayed or not.
-        $allowance = (float) $requests / $seconds;
+        // The allowance is therefore how much time is remaining in our window
+        // divided by the number of requests we can still make. This is the 
+        // value we need to store to determine if a future request should be 
+        // delayed or not.
+        $allowance = (float) $seconds / $requests;
     
         // This is just an example, it's up to you to store the request 
         // allowance, whether it's in a database or cache driver.

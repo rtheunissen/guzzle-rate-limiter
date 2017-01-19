@@ -15,12 +15,12 @@ class RateLimiter
     /**
      * @var RateLimitProvider
      */
-    private $provider;
+    protected $provider;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    protected $logger;
 
     /**
      * @var string|callable Constant or callable that accepts a Response.

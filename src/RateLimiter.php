@@ -144,11 +144,11 @@ class RateLimiter
     }
 
     /**
-     * Returns the delay duration for the given request (in microseconds).
+     * Returns the delay duration for the given request (in seconds).
      *
      * @param RequestInterface $request Request to get the delay duration for.
      *
-     * @return float The delay duration (in microseconds).
+     * @return float The delay duration (in seconds).
      */
     protected function getDelay(RequestInterface $request)
     {
@@ -161,15 +161,20 @@ class RateLimiter
     }
 
     /**
-     * Delays the given request by an amount of microseconds.
+     * Delays the given request by an amount of seconds. This method supports microsecond
+     * precision as well as integer seconds, ie. both microtime(true) or time()
      *
-     * @param float $time The amount of time (in microseconds) to delay by.
+     * @param float $seconds The amount of time (in seconds) to delay by.
      *
      * @codeCoverageIgnore
      */
-    protected function delay($time)
+    protected function delay($seconds)
     {
-        usleep($time);
+        $floor = floor($seconds);
+        $micro = max(0, floor(($seconds - $floor) * 1000000));
+
+        sleep($floor);
+        usleep($micro);
     }
 
     /**

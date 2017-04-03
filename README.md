@@ -73,8 +73,6 @@ class Provider implements RateLimitProvider
      */
     public function getRequestTime(RequestInterface $request)
     {
-        // The time unit for this value should match the time unit used across
-        // this implementation.
         return microtime(true);
     }
 
@@ -100,7 +98,7 @@ class Provider implements RateLimitProvider
 
     /**
      * Used to set the minimum amount of time that is required to pass between
-     * this request and the next (in microseconds).
+     * this request and the next request.
      *
      * @param ResponseInterface $response The resolved response.
      */

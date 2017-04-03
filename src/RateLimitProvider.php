@@ -48,13 +48,13 @@ interface RateLimitProvider
      * @param RequestInterface $request The pending request.
      *
      * @return float The minimum amount of time that is required to have passed
-     *               since the last request was made (in microseconds).
+     *               since the last request was made (in seconds).
      */
     public function getRequestAllowance(RequestInterface $request);
 
     /**
      * Used to set the minimum amount of time that is required to pass between
-     * this request and the next (in microseconds).
+     * this request and the next (in seconds).
      *
      * @param ResponseInterface $response The resolved response.
      */

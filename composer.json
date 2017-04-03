@@ -27,5 +27,8 @@
         "psr-4": {
             "Concat\\Http\\Middleware\\Test\\": "tests"
         }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }

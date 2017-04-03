@@ -95,7 +95,7 @@ class RateLimiter
      */
     protected function getLogMessage(RequestInterface $request, $delay)
     {
-        return vsprintf("[%s] %s %s was delayed by {$delay}us", [
+        return vsprintf("[%s] %s %s was delayed by {$delay} seconds", [
             gmdate("d/M/Y:H:i:s O"),
             $request->getMethod(),
             $request->getUri()

@@ -61,7 +61,7 @@ class RateLimiter
 
             // Sets the time when this request is being made,
             // which allows calculation of allowance later on.
-            $this->provider->setLastRequestTime();
+            $this->provider->setLastRequestTime($request);
 
             // Set the allowance when the response was received
             return $handler($request, $options)->then($this->setAllowance());
@@ -152,7 +152,7 @@ class RateLimiter
      */
     protected function getDelay(RequestInterface $request)
     {
-        $lastRequestTime  = $this->provider->getLastRequestTime();
+        $lastRequestTime  = $this->provider->getLastRequestTime($request);
         $requestAllowance = $this->provider->getRequestAllowance($request);
         $requestTime      = $this->provider->getRequestTime($request);
 

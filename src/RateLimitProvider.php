@@ -20,13 +20,13 @@ interface RateLimitProvider
      *
      * @return float|null When the last request was made.
      */
-    public function getLastRequestTime();
+    public function getLastRequestTime(RequestInterface $request);
 
     /**
      * Used to set the current time as the last request time to be queried when
      * the next request is attempted.
      */
-    public function setLastRequestTime();
+    public function setLastRequestTime(RequestInterface $request);
 
     /**
      * Returns what is considered the time when a given request is being made.

@@ -42,7 +42,7 @@ interface RateLimitProvider
      * the last request was made. This value is used to determine if the current
      * request should be delayed, based on when the last request was made.
      *
-     * Returns the allowed  between the last request and the next, which
+     * Returns the allowed time between the last request and the next, which
      * is used to determine if a request should be delayed and by how much.
      *
      * @param RequestInterface $request The pending request.

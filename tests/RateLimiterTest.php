@@ -62,10 +62,12 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
 
         $provider->shouldReceive('getLastRequestTime')
                  ->once()
+                 ->with(m::type(RequestInterface::class))
                  ->andReturn($last);
 
         $provider->shouldReceive('getRequestTime')
                  ->once()
+                 ->with(m::type(RequestInterface::class))
                  ->andReturn($current);
 
         $method = $this->getMethod(RateLimiter::class, 'getDelay');
@@ -89,7 +91,7 @@ class RateLimiterTest extends \PHPUnit_Framework_TestCase
     {
         $provider = m::mock(RateLimitProvider::class);
         $provider->shouldReceive('setRequestAllowance')->once()->with(m::type(ResponseInterface::class));
-        $provider->shouldReceive('setLastRequestTime')->once();
+        $provider->shouldReceive('setLastRequestTime')->once()->with(m::type(RequestInterface::class));
 
         $promise = m::mock(PromiseInterface::class);
         $promise->shouldReceive('then')->once()->andReturnUsing(function ($a) {

@@ -9,6 +9,8 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Concat\Http\Middleware\RateLimiter;
 use GuzzleHttp\Promise\PromiseInterface;
+use GuzzleHttp\TransferStats;
+use GuzzleHttp\RequestOptions;
 use Concat\Http\Middleware\RateLimitProvider;
 use ReflectionClass;
 
@@ -92,7 +94,9 @@ class RateLimiterTest extends \Mockery\Adapter\Phpunit\MockeryTestCase
             return $a;
         });
 
-        $handler = function ($request, $options) use ($promise) {
+        $handler = function ($request, $options) use ($promise, $delay) {
+            $this->assertSame($options[RequestOptions::DELAY], $delay * 1000);
+            $options[RequestOptions::ON_STATS](new TransferStats($request, null));
             return $promise;
         };
 
@@ -111,7 +115,6 @@ class RateLimiterTest extends \Mockery\Adapter\Phpunit\MockeryTestCase
         }
 
         $limiter->shouldReceive('getDelay')->once()->with(m::type(RequestInterface::class))->andReturn($delay);
-        $limiter->shouldReceive('delay')->once()->with($delay);
 
         $callback = $limiter->__invoke($handler);
         $result = $callback->__invoke($request, []);

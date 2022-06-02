@@ -6,6 +6,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use GuzzleHttp\TransferStats;
+use GuzzleHttp\RequestOptions;
 
 /**
  * Guzzle middleware which delays requests if they exceed a rate allowance.
@@ -55,13 +57,15 @@ class RateLimiter
             $delay = $this->getDelay($request);
 
             if ($delay > 0) {
-                $this->delay($delay);
-                $this->log($request, $delay);
-            }
+                $options[RequestOptions::DELAY] = $delay * 1000;
+                $options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($delay) {
+                    $this->log($stats->getRequest(), $delay);
 
-            // Sets the time when this request is being made,
-            // which allows calculation of allowance later on.
-            $this->provider->setLastRequestTime($request);
+                    // Sets the time when this request is being made,
+                    // which allows calculation of allowance later on.
+                    $this->provider->setLastRequestTime($stats->getRequest());
+                };
+            }
 
             // Set the allowance when the response was received
             return $handler($request, $options)->then($this->setAllowance());
@@ -158,23 +162,6 @@ class RateLimiter
 
         // If lastRequestTime is null or false, the max will be 0.
         return max(0, $requestAllowance - ($requestTime - $lastRequestTime));
-    }
-
-    /**
-     * Delays the given request by an amount of seconds. This method supports microsecond
-     * precision as well as integer seconds, ie. both microtime(true) or time()
-     *
-     * @param float $seconds The amount of time (in seconds) to delay by.
-     *
-     * @codeCoverageIgnore
-     */
-    protected function delay($seconds)
-    {
-        $floor = floor($seconds);
-        $micro = max(0, floor(($seconds - $floor) * 1000000));
-
-        sleep($floor);
-        usleep($micro);
     }
 
     /**

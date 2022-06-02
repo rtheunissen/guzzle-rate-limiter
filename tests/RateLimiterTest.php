@@ -14,8 +14,13 @@ use GuzzleHttp\RequestOptions;
 use Concat\Http\Middleware\RateLimitProvider;
 use ReflectionClass;
 
-class RateLimiterTest extends \Mockery\Adapter\Phpunit\MockeryTestCase
+class RateLimiterTest extends \PHPUnit\Framework\TestCase
 {
+    public function tearDown(): void
+    {
+        m::close();
+    }
+
     private function getMethod($class, $name)
     {
         $class = new ReflectionClass($class);

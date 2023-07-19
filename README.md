@@ -61,7 +61,7 @@ class Provider implements RateLimitProvider
     {
         // This is just an example, it's up to you to store the time of the
         // most recent request, whether it's in a database or cache driver.
-        return Cache::put('last_request_time', microtime(true));
+        return Cache::forever('last_request_time', microtime(true));
     }
 
     /**
@@ -122,7 +122,7 @@ class Provider implements RateLimitProvider
     
         // This is just an example, it's up to you to store the request 
         // allowance, whether it's in a database or cache driver.
-        Cache::put('request_allowance', $allowance);
+        Cache::forever('request_allowance', $allowance);
     }
 }
 ```

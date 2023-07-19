@@ -66,7 +66,6 @@ class RateLimiter
                     $this->provider->setLastRequestTime($stats->getRequest());
                 };
             }
-
             // Set the allowance when the response was received
             return $handler($request, $options)->then($this->setAllowance());
         };
@@ -140,7 +139,7 @@ class RateLimiter
             return $this->getDefaultLogLevel();
         }
 
-        if (is_callable($this->logLevel)) {
+        if ($this->logLevel instanceof \Closure) {
             return call_user_func($this->logLevel, $request);
         }
 

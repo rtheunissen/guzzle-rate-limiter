@@ -12,14 +12,17 @@ use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\TransferStats;
 use GuzzleHttp\RequestOptions;
 use Concat\Http\Middleware\RateLimitProvider;
+use GuzzleHttp\Promise\Promise;
+use GuzzleHttp\Client;
+use GuzzleHttp\Psr7\Request;
 use ReflectionClass;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Handler\MockHandler;
 
 class RateLimiterTest extends \PHPUnit\Framework\TestCase
 {
-    public function tearDown(): void
-    {
-        m::close();
-    }
+    use \Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 
     private function getMethod($class, $name)
     {
@@ -72,8 +75,13 @@ class RateLimiterTest extends \PHPUnit\Framework\TestCase
                  ->andReturn($current);
 
         $method = $this->getMethod(RateLimiter::class, 'getDelay');
+
         $limiter = new RateLimiter($provider);
-        $this->assertEquals($expected, $method->invoke($limiter, $request));
+
+        $this->assertEquals(
+            sprintf($expected),
+            sprintf($method->invoke($limiter, $request))
+        );
     }
 
     public function providerTestInvoke()
@@ -94,25 +102,10 @@ class RateLimiterTest extends \PHPUnit\Framework\TestCase
         $provider->shouldReceive('setRequestAllowance')->once()->with(m::type(ResponseInterface::class));
         $provider->shouldReceive('setLastRequestTime')->once()->with(m::type(RequestInterface::class));
 
-        $promise = m::mock(PromiseInterface::class);
-        $promise->shouldReceive('then')->once()->andReturnUsing(function ($a) {
-            return $a;
-        });
-
-        $handler = function ($request, $options) use ($promise, $delay) {
-            $this->assertSame($options[RequestOptions::DELAY], $delay * 1000);
-            $options[RequestOptions::ON_STATS](new TransferStats($request, null));
-            return $promise;
-        };
-
-        $request = m::mock(RequestInterface::class);
-        $request->shouldReceive('getMethod')->andReturn($method);
-        $request->shouldReceive('getUri')->andReturn('/');
-
         $logger = m::mock(LoggerInterface::class);
         $logger->shouldReceive('log')->with(LogLevel::DEBUG, m::type('string'), m::type('array'));
 
-        $limiter = m::mock(RateLimiter::class . "[getDelay,delay]", [$provider, $logger]);
+        $limiter = m::mock(RateLimiter::class . "[getDelay]", [$provider, $logger]);
         $limiter->shouldAllowMockingProtectedMethods();
 
         if ($level) {
@@ -121,10 +114,21 @@ class RateLimiterTest extends \PHPUnit\Framework\TestCase
 
         $limiter->shouldReceive('getDelay')->once()->with(m::type(RequestInterface::class))->andReturn($delay);
 
-        $callback = $limiter->__invoke($handler);
-        $result = $callback->__invoke($request, []);
+        $middleware = function(callable $handler) use ($delay) {
+            return function ($request, $options) use ($handler, $delay) {
+                $this->assertSame($options[RequestOptions::DELAY] ?? 0, $delay * 1000);
+                return $handler($request, $options);
+            };
+        };
 
-        $response = m::mock(ResponseInterface::class);
-        $result->__invoke($response);
+        $stack = new HandlerStack();
+        $stack->setHandler(new MockHandler([new Response(200, [])]));
+        $stack->unshift($middleware);
+        $stack->unshift($limiter);
+
+        $client = new Client([
+            'handler' => $stack,
+        ]);
+        $client->send(new Request($method, '/'));
     }
 }

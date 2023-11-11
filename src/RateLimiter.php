@@ -58,14 +58,16 @@ class RateLimiter
 
             if ($delay > 0) {
                 $options[RequestOptions::DELAY] = $delay * 1000;
-                $options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($delay) {
-                    $this->log($stats->getRequest(), $delay);
-
-                    // Sets the time when this request is being made,
-                    // which allows calculation of allowance later on.
-                    $this->provider->setLastRequestTime($stats->getRequest());
-                };
             }
+
+            $options[RequestOptions::ON_STATS] = function (TransferStats $stats) use ($delay) {
+                $this->log($stats->getRequest(), $delay);
+
+                // Sets the time when this request is being made,
+                // which allows calculation of allowance later on.
+                $this->provider->setLastRequestTime($stats->getRequest());
+            };
+
             // Set the allowance when the response was received
             return $handler($request, $options)->then($this->setAllowance());
         };
